@@ -1,5 +1,8 @@
 {
     "name": "gcloud-func-reporturi",
-    "main": "report.js"
-  }
-  
+    "version": "1.0.0",
+    "main": "report.js",
+    "dependencies": {
+        "@google-cloud/logging": "^4.5.2"
+    }
+}
