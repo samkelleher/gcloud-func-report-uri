@@ -16,7 +16,7 @@ function logPayload(req, res) {
         resource: {
           type: 'cloud_function',
           labels: {
-            function_name: process.env.FUNCTION_NAME,
+            function_name: process.env.K_SERVICE,
           },
         },
       };
@@ -25,17 +25,13 @@ function logPayload(req, res) {
       const errorEvent = {
         message: 'A report has been submitted.',
         serviceContext: {
-          service: `cloud_function:${process.env.FUNCTION_NAME}`,
-          version: require('./package.json').version || 'unknown',
+          service: `cloud_function:${process.env.K_SERVICE}`,
+          version: `${process.env.K_REVISION}`,
         },
       };
     
       // Write the error log entry
-      return new Promise((resolve, reject) => {
-        log.write(log.entry(metadata, errorEvent), () => {
-            resolve();
-        });
-      });
+    return log.write(log.entry(metadata, errorEvent));
 }
 
 exports.report = function(req, res) {
@@ -56,7 +52,8 @@ exports.report = function(req, res) {
         .then(() => {
             res.sendStatus(204);
         })
-        .catch(() => {
+        .catch((error) => {
+            console.log(error);
             res.sendStatus(500);
         });
     
