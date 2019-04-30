@@ -3,15 +3,19 @@ const BodyParser = require('body-parser');
 
 const logging = new GCloud.Logging();
 
-const bodyParser =  BodyParser.json({
+const jsonParser =  BodyParser.json({
     type: ['application/csp-report', 'application/expect-ct-report+json'],
 });
 
 function processBody(req, res) {
-    return new Promise((resolve) => {
-        jsonParser(req, res, () => {
+    return new Promise((resolve, reject) => {
+        jsonParser(req, res, (error) => {
             // If the body type matches, req.body will be populated.
-            resolve(req);
+            if (error) {
+                reject(error);
+            } else {
+                resolve(req);
+            }
         });
     });
 }
@@ -66,13 +70,9 @@ exports.report = function(req, res) {
     }
 
     if (req.is('application/json')) {
-        res.sendStatus(400);
-    }
-
-    processBody(req, res)
-        .then((reqWithBody) => {
-            
-            logPayload(reqWithBody, res)
+        // The body will have already been parsed.
+        // Should we ignore random JSON being posted?
+        logPayload(reqWithBody, res)
                 .then(() => {
                     res.sendStatus(204);
                 })
@@ -80,11 +80,26 @@ exports.report = function(req, res) {
                     console.error(error);
                     res.sendStatus(500);
                 });
+    } else {
+        // We need to process the body before trying to log.
+        processBody(req, res)
+            .then((reqWithBody) => {
+                
+                logPayload(reqWithBody, res)
+                    .then(() => {
+                        res.sendStatus(204);
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        res.sendStatus(500);
+                    });
 
-        })
-        .catch((error) => {
-            // the body was malformed in some way
-            console.error(error);
-            res.sendStatus(400);
-        });
+            })
+            .catch((error) => {
+                // the body was malformed in some way
+                console.error(error);
+                res.sendStatus(400);
+            });
+    }
+    
 }
