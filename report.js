@@ -1,6 +1,6 @@
 const Logging = require('@google-cloud/logging');
 
-const logging = Logging();
+const logging = new Logging();
 
 function hasbody (req) {
     return req.headers['transfer-encoding'] !== undefined ||
