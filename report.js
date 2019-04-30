@@ -34,7 +34,7 @@ function logPayload(req, res) {
       return new Promise((resolve, reject) => {
         log.write(log.entry(metadata, errorEvent), () => {
             resolve();
-        }));
+        });
       });
 }
 
