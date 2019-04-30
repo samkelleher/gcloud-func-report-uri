@@ -1,6 +1,20 @@
 const GCloud = require('@google-cloud/logging');
+const BodyParser = require('body-parser');
 
 const logging = new GCloud.Logging();
+
+const bodyParser =  BodyParser.json({
+    type: ['application/csp-report', 'application/expect-ct-report+json'],
+});
+
+function processBody(req, res) {
+    return new Promise((resolve) => {
+        jsonParser(req, res, () => {
+            // If the body type matches, req.body will be populated.
+            resolve(req);
+        });
+    });
+}
 
 function hasbody (req) {
     return req.headers['transfer-encoding'] !== undefined ||
@@ -19,11 +33,13 @@ function logPayload(req, res) {
             function_name: process.env.K_SERVICE,
           },
         },
+        severity: 'ALERT',
       };
     
       // https://cloud.google.com/error-reporting/reference/rest/v1beta1/ErrorEvent
       const errorEvent = {
         message: 'A report has been submitted.',
+        report: req.body,
         serviceContext: {
           service: `cloud_function:${process.env.K_SERVICE}`,
           version: `${process.env.K_REVISION}`,
@@ -48,13 +64,27 @@ exports.report = function(req, res) {
         res.sendStatus(400);
         return;
     }
-    logPayload(req, res)
-        .then(() => {
-            res.sendStatus(204);
+
+    if (req.is('application/json')) {
+        res.sendStatus(400);
+    }
+
+    processBody(req, res)
+        .then((reqWithBody) => {
+            
+            logPayload(reqWithBody, res)
+                .then(() => {
+                    res.sendStatus(204);
+                })
+                .catch((error) => {
+                    console.log(error);
+                    res.sendStatus(500);
+                });
+
         })
-        .catch((error) => {
+        .catch(() => {
+            // the body was malformed in some way
             console.log(error);
-            res.sendStatus(500);
+            res.sendStatus(400);
         });
-    
 }

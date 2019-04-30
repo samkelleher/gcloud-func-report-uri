@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "main": "report.js",
     "dependencies": {
-        "@google-cloud/logging": "^4.5.2"
+        "@google-cloud/logging": "^4.5.2",
+        "body-parser": "^1.19.0"
     }
 }
