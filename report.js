@@ -77,14 +77,14 @@ exports.report = function(req, res) {
                     res.sendStatus(204);
                 })
                 .catch((error) => {
-                    console.log(error);
+                    console.error(error);
                     res.sendStatus(500);
                 });
 
         })
-        .catch(() => {
+        .catch((error) => {
             // the body was malformed in some way
-            console.log(error);
+            console.error(error);
             res.sendStatus(400);
         });
 }
