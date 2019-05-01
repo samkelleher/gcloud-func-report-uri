@@ -29,6 +29,18 @@ function logPayload(req, res) {
     const logName = 'report-uri';
     const log = logging.log(logName);
 
+    const report = req.body;
+
+    let reportType = 'unknown';
+
+    if (!report) {
+        reportType = 'not-parsed';
+    } else if (report['csp-report']) {
+        reportType = 'CSP';
+    } else if (report['expect-ct-report']) {
+        reportType = 'Expect-CT';
+    }
+
     const metadata = {
         // https://cloud.google.com/logging/docs/api/ref_v2beta1/rest/v2beta1/MonitoredResource
         resource: {
@@ -42,8 +54,9 @@ function logPayload(req, res) {
     
       // https://cloud.google.com/error-reporting/reference/rest/v1beta1/ErrorEvent
       const errorEvent = {
-        message: 'A report has been submitted.',
-        report: req.body,
+        message: `A ${reportType} report has been submitted.`,
+        reportType,
+        report,
         serviceContext: {
           service: `cloud_function:${process.env.K_SERVICE}`,
           version: `${process.env.K_REVISION}`,
