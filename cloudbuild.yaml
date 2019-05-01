@@ -1,0 +1,6 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['functions', 'deploy', '$_K_SERVICE', '--region=$_REGION', '--quiet']
+substitutions:
+    _REGION: us-central1 # default value
+    _K_SERVICE: report-uri # default value
