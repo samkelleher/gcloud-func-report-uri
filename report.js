@@ -39,6 +39,8 @@ function logPayload(req, res) {
         reportType = 'CSP';
     } else if (report['expect-ct-report']) {
         reportType = 'Expect-CT';
+    } else {
+        reportType = `unknown type of '${typeof report}'`;
     }
 
     const metadata = {
