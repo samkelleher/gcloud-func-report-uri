@@ -108,6 +108,7 @@ exports.report = function(req, res) {
                 });
     } else {
         // We need to process the body before trying to log.
+        req._body = false; // Reset so body will be reparsed.
         processBody(req, res)
             .then((reqWithBody) => {
                 
