@@ -2,6 +2,9 @@
     "name": "gcloud-func-reporturi",
     "version": "1.0.0",
     "main": "report.js",
+    "engines" : { 
+        "node" : ">=10.0.0" 
+    },
     "dependencies": {
         "@google-cloud/logging": "^4.5.2",
         "body-parser": "^1.19.0"
