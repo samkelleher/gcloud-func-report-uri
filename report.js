@@ -2,6 +2,8 @@ const GCloud = require('@google-cloud/logging');
 const BodyParser = require('body-parser');
 
 const logging = new GCloud.Logging();
+const logName = 'report-uri';
+const log = logging.log(logName);
 
 const jsonParser =  BodyParser.json({
     type: ['application/csp-report', 'application/expect-ct-report+json'],
@@ -26,9 +28,6 @@ function hasbody (req) {
 }
 
 function logPayload(req, res) {
-    const logName = 'report-uri';
-    const log = logging.log(logName);
-
     const report = req.body;
 
     let reportType = 'unknown';
@@ -54,9 +53,10 @@ function logPayload(req, res) {
         severity: 'ALERT',
       };
     
+      const message = `A ${reportType} report has been submitted.`;
       // https://cloud.google.com/error-reporting/reference/rest/v1beta1/ErrorEvent
       const errorEvent = {
-        message: `A ${reportType} report has been submitted.`,
+        message,
         reportType,
         report,
         serviceContext: {
@@ -65,8 +65,19 @@ function logPayload(req, res) {
         },
       };
     
+
+      const entry = log.entry(metadata, errorEvent);
+
       // Write the error log entry
-    return log.write(log.entry(metadata, errorEvent));
+    return new Promise((resolve, reject) => {
+        log
+            .write(entry)
+            .then(() => {
+                const outputAsJson = entry.toJSON();
+                resolve(JSON.stringify(outputAsJson, null, 2));
+            })
+            .catch(reject);
+    });
 }
 
 exports.report = function(req, res) {
@@ -87,9 +98,9 @@ exports.report = function(req, res) {
     if (req.is('application/json')) {
         // The body will have already been parsed.
         // Should we ignore random JSON being posted?
-        logPayload(reqWithBody, res)
-                .then(() => {
-                    res.sendStatus(204);
+        logPayload(req, res)
+                .then((message) => {
+                    res.status(200).send(message);
                 })
                 .catch((error) => {
                     console.error(error);
@@ -101,8 +112,8 @@ exports.report = function(req, res) {
             .then((reqWithBody) => {
                 
                 logPayload(reqWithBody, res)
-                    .then(() => {
-                        res.sendStatus(204);
+                    .then((message) => {
+                        res.status(200).send(message);
                     })
                     .catch((error) => {
                         console.error(error);
